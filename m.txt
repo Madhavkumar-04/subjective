@@ -1,0 +1,139 @@
+Admins
+Students
+Teachers
+Tests
+Questions
+ExpectedAnswers
+
+from flask import Flask, request, jsonify
+import joblib
+import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from nltk.sentiment import SentimentIntensityAnalyzer
+from sentence_transformers import SentenceTransformer
+import nltk
+import warnings
+
+warnings.filterwarnings("ignore")
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('vader_lexicon')
+
+# Preprocessing function
+def preprocess_text(text):
+    tokens = word_tokenize(text)
+    lemmatizer = WordNetLemmatizer()
+    lemmatized_tokens = [lemmatizer.lemmatize(token.lower()) for token in tokens]
+    return lemmatized_tokens
+
+# Feature computation functions (from your existing code)
+def exact_match(expected_answer, student_answer):
+    return int(expected_answer == student_answer)
+
+def partial_match(expected_answer, student_answer):
+    expected_tokens = preprocess_text(expected_answer)
+    student_tokens = preprocess_text(student_answer)
+    common_tokens = set(expected_tokens) & set(student_tokens)
+    return len(common_tokens) / max(len(expected_tokens), len(student_tokens))
+
+def cosine_similarity_score(expected_answer, student_answer):
+    vectorizer = TfidfVectorizer(tokenizer=preprocess_text)
+    tfidf_matrix = vectorizer.fit_transform([expected_answer, student_answer])
+    return cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])[0][0]
+
+def sentiment_analysis(text):
+    sia = SentimentIntensityAnalyzer()
+    sentiment_score = sia.polarity_scores(text)['compound']
+    return (sentiment_score + 1) / 2
+
+def semantic_similarity_score(expected_answer, student_answer):
+    model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+    embeddings_expected = model.encode([expected_answer])
+    embeddings_student = model.encode([student_answer])
+    return cosine_similarity([embeddings_expected.flatten()], [embeddings_student.flatten()])[0][0]
+
+def coherence_score(expected_answer, student_answer):
+    len_expected = len(word_tokenize(expected_answer))
+    len_student = len(word_tokenize(student_answer))
+    return min(len_expected, len_student) / max(len_expected, len_student)
+
+def relevance_score(expected_answer, student_answer):
+    expected_tokens = set(word_tokenize(expected_answer.lower()))
+    student_tokens = set(word_tokenize(student_answer.lower()))
+    common_tokens = expected_tokens.intersection(student_tokens)
+    return len(common_tokens) / len(expected_tokens)
+
+# Function to compute all features
+def compute_features(expected_answer, student_answer):
+    return {
+        'exact_match': exact_match(expected_answer, student_answer),
+        'partial_match': partial_match(expected_answer, student_answer),
+        'cosine_similarity': cosine_similarity_score(expected_answer, student_answer),
+        'sentiment_score': sentiment_analysis(student_answer),
+        'semantic_similarity': semantic_similarity_score(expected_answer, student_answer),
+        'coherence_score': coherence_score(expected_answer, student_answer),
+        'relevance_score': relevance_score(expected_answer, student_answer)
+    }
+
+# Example: Training the model (run this separately to train and save the model)
+def train_model():
+    # Sample data (replace with your actual dataset)
+    data = [
+        {'expected_answer': 'The capital of France is Paris.', 'student_answer': 'Paris is the capital of France.', 'score': 10},
+        {'expected_answer': 'The capital of France is Paris.', 'student_answer': 'France has a capital called Paris.', 'score': 8},
+        {'expected_answer': 'The capital of France is Paris.', 'student_answer': 'The capital is Florida.', 'score': 2}
+    ]
+    
+    # Prepare features and labels
+    X = []
+    y = []
+    for item in data:
+        features = compute_features(item['expected_answer'], item['student_answer'])
+        X.append(list(features.values()))
+        y.append(item['score'])
+    
+    # Split data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    # Train model
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+    
+    # Save model
+    joblib.dump(model, 'scoring_model.joblib')
+    
+    # Evaluate (optional)
+    print("Model trained and saved. Test score:", model.score(X_test, y_test))
+
+# Flask API
+app = Flask(__name__)
+model = joblib.load('scoring_model.joblib')
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        data = request.get_json()
+        expected_answer = data['expected_answer']
+        student_answer = data['student_answer']
+        
+        # Compute features
+        features = compute_features(expected_answer, student_answer)
+        input_data = [list(features.values())]
+        
+        # Predict score
+        score = model.predict(input_data)[0]
+        
+        return jsonify({'score': round(score)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5001)
+
+# To train the model, uncomment and run the following line separately
+# train_model()
