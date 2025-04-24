@@ -1,0 +1,10 @@
+Flask 
+Flask-MySQLdb 
+pandas 
+nltk 
+sentence-transformers 
+scikit-learnnltk 
+scikit-learn 
+sentence-transformers 
+language-tool-python
+vercel-wsgi
