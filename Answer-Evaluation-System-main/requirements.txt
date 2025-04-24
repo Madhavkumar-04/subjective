@@ -3,7 +3,8 @@ Flask-MySQLdb
 pandas 
 nltk 
 sentence-transformers 
-scikit-learnnltk 
+scikit-learn
+nltk 
 scikit-learn 
 sentence-transformers 
 language-tool-python
