@@ -1,14 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
-import sys
-import string
-import pandas as pd
 import nltk
 from nltk.corpus import stopwords
-from sentence_transformers import SentenceTransformer
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from nltk.sentiment import SentimentIntensityAnalyzer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.naive_bayes import MultinomialNB
 import warnings
 from collections import defaultdict
+import joblib
+from scheduler import init_scheduler, retrain_models
+from updated_nlp_functions import enhanced_sentence_match, semantic_similarity_score
+from fine_tune_sentence_transformer import fine_tune_sentence_transformer
 
 warnings.filterwarnings("ignore")
 for pkg in ["stopwords", "punkt", "wordnet", "vader_lexicon"]:
@@ -16,49 +21,29 @@ for pkg in ["stopwords", "punkt", "wordnet", "vader_lexicon"]:
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-
-# Set the template folder
 app.template_folder = 'templates'
 
-# # MySQL Configuration
-# app.config['MYSQL_HOST'] = 'localhost'
-# app.config['MYSQL_USER'] = 'root'
-# app.config['MYSQL_PASSWORD'] = ''  # Enter your MySQL password here
-# app.config['MYSQL_DB'] = 'teacher_part'
-
+# MySQL Configuration
 app.config['MYSQL_HOST'] = 'application-portal-application-portal.h.aivencloud.com'
 app.config['MYSQL_PORT'] = 28768
 app.config['MYSQL_USER'] = 'avnadmin'
 app.config['MYSQL_PASSWORD'] = 'AVNS_Jf9TxCISqeiBQWDQjIf'
 app.config['MYSQL_DB'] = 'defaultdb'
-app.config['MYSQL_SSL'] = {'ssl': {'ca': '', 'check_hostname': False}}  # Optional: for SSL
-
+app.config['MYSQL_SSL'] = {'ssl': {'ca': '', 'check_hostname': False}}
 
 mysql = MySQL(app)
+
+# Initialize scheduler
+scheduler = init_scheduler(app, mysql)
 
 # Set English stopwords
 EN_STOPWORDS = set(stopwords.words("english"))
 
 # Preprocess text
-
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
-from nltk.sentiment import SentimentIntensityAnalyzer
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.naive_bayes import MultinomialNB
-from sentence_transformers import SentenceTransformer
-import language_tool_python
-
-# nltk.download('punkt')
-# nltk.download('wordnet')
-# nltk.download('vader_lexicon')
-
 def preprocess_text(text):
-    tokens = word_tokenize(text)  # Tokenization
+    tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
-    lemmatized_tokens = [lemmatizer.lemmatize(token.lower()) for token in tokens]  # Lemmatization
+    lemmatized_tokens = [lemmatizer.lemmatize(token.lower()) for token in tokens]
     return lemmatized_tokens
 
 # Exact Match function
@@ -84,61 +69,35 @@ def cosine_similarity_score(expected_answer, student_answer):
 def sentiment_analysis(text):
     sia = SentimentIntensityAnalyzer()
     sentiment_score = sia.polarity_scores(text)['compound']
-    return (sentiment_score + 1) / 2  # Normalize to range [0, 1]
+    return (sentiment_score + 1) / 2
 
-# Function to calculate enhanced sentence match score using Semantic Similarity
-def enhanced_sentence_match(expected_answer, student_answer):
-    model = SentenceTransformer('paraphrase-MiniLM-L6-v2')  # Load pre-trained Sentence Transformer model
-    embeddings_expected = model.encode([expected_answer])
-    embeddings_student = model.encode([student_answer])
-    similarity = cosine_similarity([embeddings_expected.flatten()], [embeddings_student.flatten()])[0][0]
-    return similarity
-
-# Function to calculate multinomial naive Bayes score
+# Multinomial Naive Bayes score
 def multinomial_naive_bayes_score(expected_answer, student_answer):
-    # Convert answers to a list
-    answers = [expected_answer, student_answer]
+    try:
+        clf = joblib.load('naive_bayes_model.pkl')
+        vectorizer = joblib.load('vectorizer.pkl')
+    except FileNotFoundError:
+        answers = [expected_answer, student_answer]
+        vectorizer = CountVectorizer(tokenizer=preprocess_text)
+        X = vectorizer.fit_transform(answers)
+        y = [0, 1]
+        clf = MultinomialNB()
+        clf.fit(X, y)
+        joblib.dump(clf, 'naive_bayes_model.pkl')
+        joblib.dump(vectorizer, 'vectorizer.pkl')
 
-    # Initialize CountVectorizer
-    vectorizer = CountVectorizer(tokenizer=preprocess_text)
+    X_student = vectorizer.transform([student_answer])
+    probs = clf.predict_proba(X_student)
+    return probs[0][1]
 
-    # Fit and transform the answers
-    X = vectorizer.fit_transform(answers)
-
-    # Labels
-    y = [0, 1]  # 0 for expected_answer, 1 for student_answer
-
-    # Train Multinomial Naive Bayes classifier
-    clf = MultinomialNB()
-    clf.fit(X, y)
-
-    # Predict probabilities
-    probs = clf.predict_proba(X)
-
-    # Return the probability of the student's answer being correct
-    return probs[1][1]  # Probability of the student's answer being class 1 (student_answer)
-
-# Function to calculate weighted average score
-def weighted_average_score(scores, weights):
-    weighted_sum = sum(score * weight for score, weight in zip(scores, weights))
-    total_weight = sum(weights)
-    return weighted_sum / total_weight
-
-def semantic_similarity_score(expected_answer, student_answer):
-    model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-    embeddings_expected = model.encode([expected_answer])
-    embeddings_student = model.encode([student_answer])
-    similarity = cosine_similarity([embeddings_expected.flatten()], [embeddings_student.flatten()])[0][0]
-    return similarity
-
-
-
+# Coherence Score
 def coherence_score(expected_answer, student_answer):
     len_expected = len(word_tokenize(expected_answer))
     len_student = len(word_tokenize(student_answer))
     coherence_score = min(len_expected, len_student) / max(len_expected, len_student)
     return coherence_score
 
+# Relevance Score
 def relevance_score(expected_answer, student_answer):
     expected_tokens = set(word_tokenize(expected_answer.lower()))
     student_tokens = set(word_tokenize(student_answer.lower()))
@@ -146,6 +105,13 @@ def relevance_score(expected_answer, student_answer):
     relevance_score = len(common_tokens) / len(expected_tokens)
     return relevance_score
 
+# Weighted Average Score
+def weighted_average_score(scores, weights):
+    weighted_sum = sum(score * weight for score, weight in zip(scores, weights))
+    total_weight = sum(weights)
+    return weighted_sum / total_weight
+
+# Evaluate Function
 def evaluate(expected, response):
     if expected == response:
         return 10
@@ -159,40 +125,53 @@ def evaluate(expected, response):
     sentiment_score = sentiment_analysis(response)
     enhanced_sentence_match_score = enhanced_sentence_match(expected, response)
     multinomial_naive_bayes_score_value = multinomial_naive_bayes_score(expected, response)
-
-    # Additional evaluation criteria
     semantic_similarity_value = semantic_similarity_score(expected, response)
     coherence_value = coherence_score(expected, response)
     relevance_value = relevance_score(expected, response)
 
-    # Weighted average calculation
-    scores = [exact_match_score, partial_match_score, cosine_similarity_score_value,
-              sentiment_score, enhanced_sentence_match_score, multinomial_naive_bayes_score_value,
-              semantic_similarity_value,  coherence_value, relevance_value]
-    # Weights for evaluation criteria
-    weights = [0.15, 0.1, 0.1, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1]
-
+    # Load optimized weights if available
+    try:
+        weights = joblib.load('optimized_weights.pkl')
+    except FileNotFoundError:
+        weights = [0.15, 0.1, 0.1, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1]
 
     # Scale scores between 0 and 10
+    scores = [
+        exact_match_score, partial_match_score, cosine_similarity_score_value,
+        sentiment_score, enhanced_sentence_match_score, multinomial_naive_bayes_score_value,
+        semantic_similarity_value, coherence_value, relevance_value
+    ]
     scaled_scores = [score * 10 for score in scores]
 
     # Calculate final weighted average score
     final_score = weighted_average_score(scaled_scores, weights)
     rounded_score = round(final_score)
 
-    # Print individual scores
-    print("Exact Match Score:", exact_match_score)
-    print("Partial Match Score:", partial_match_score)
-    print("Cosine Similarity Score:", cosine_similarity_score_value)
-    print("Sentiment Score:", sentiment_score)
-    print("Enhanced Sentence Match Score:", enhanced_sentence_match_score)
-    print("Multinomial Naive Bayes Score:", multinomial_naive_bayes_score_value)
-    print("Semantic Similarity Score:", semantic_similarity_value)
-    print("Coherence Score:", coherence_value)
-    print("Relevance Score:", relevance_value)
+    # Store individual scores in database
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        UPDATE StudentAnswers
+        SET exact_match_score = %s, partial_match_score = %s, cosine_similarity_score = %s,
+            sentiment_score = %s, enhanced_sentence_match_score = %s, multinomial_naive_bayes_score = %s,
+            semantic_similarity_score = %s, coherence_score = %s, relevance_score = %s
+        WHERE answer_text = %s AND question_id = (SELECT question_id FROM ExpectedAnswers WHERE answer_text = %s LIMIT 1)
+    """, (
+        exact_match_score, partial_match_score, cosine_similarity_score_value,
+        sentiment_score, enhanced_sentence_match_score, multinomial_naive_bayes_score_value,
+        semantic_similarity_value, coherence_value, relevance_value, response, expected
+    ))
+    mysql.connection.commit()
+    cur.close()
 
-    marks = rounded_score  # or use final_score if you want to return the exact value without rounding
-    return marks
+    return rounded_score
+
+# Check if student has taken a test
+def check_test_taken(student_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT COUNT(*) FROM StudentAnswers WHERE student_id = %s", (student_id,))
+    count = cur.fetchone()[0]
+    cur.close()
+    return count > 0
 
 # Admin login route
 @app.route('/')
