@@ -1,11 +1,8 @@
-Flask 
-Flask-MySQLdb 
-pandas 
-nltk 
-sentence-transformers 
+Flask
+Flask-MySQLdb
+pandas
+nltk
+sentence-transformers
 scikit-learn
-nltk 
-scikit-learn 
-sentence-transformers 
 language-tool-python
-vercel-wsgi
+wsgi-adapter

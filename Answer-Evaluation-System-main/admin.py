@@ -9,6 +9,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import warnings
 from collections import defaultdict
+from wsgi_adapter import handler
 
 warnings.filterwarnings("ignore")
 for pkg in ["stopwords", "punkt", "wordnet", "vader_lexicon"]:
@@ -853,5 +854,7 @@ def student_view_score():
 
 
 ###########################################
-if __name__ == '__main__':
-    app.run()
+def main(environ, start_response):
+    return handler(app, environ, start_response)
+# if __name__ == '__main__':
+#     app.run()
