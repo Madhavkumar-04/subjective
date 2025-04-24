@@ -5,4 +5,3 @@ nltk
 sentence-transformers
 scikit-learn
 language-tool-python
-wsgi-adapter
