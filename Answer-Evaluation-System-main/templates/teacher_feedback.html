@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Feedback</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card { background-color: #1a202c; color: #e2e8f0; }
+        .form-control { background-color: #2d3748; color: #e2e8f0; border-color: #4a5568; }
+        .form-control:focus { background-color: #2d3748; color: #e2e8f0; border-color: #3182ce; }
+        label { color: #a0aec0; }
+        .btn-primary { background-color: #3182ce; border-color: #3182ce; }
+        .btn-primary:hover { background-color: #2b6cb0; border-color: #2b6cb0; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="{{ url_for('teacher_home') }}">Teacher Panel</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('teacher_home') }}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('teacher_view_score') }}">Scores</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('teacher_logout') }}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h1 class="text-3xl font-bold mb-6">Submit Feedback</h1>
+
+        <div class="card bg-dark text-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Feedback for Answer</h2>
+            {% if answer %}
+            <div class="mb-4">
+                <p><strong>Student Answer:</strong> {{ answer[0]|default('N/A') }}</p>
+                <p><strong>Expected Answer:</strong> {{ answer[1]|default('N/A') }}</p>
+                <p><strong>Current Score:</strong> {{ answer[2]|default(0)|round(2) }}</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('teacher_submit_feedback', answer_id=answer_id) }}">
+                <div class="form-group mb-4">
+                    <label for="corrected_score" class="block text-sm font-medium">Corrected Score (0-10)</label>
+                    <input type="number" step="0.1" min="0" max="10" name="corrected_score" id="corrected_score"
+                           class="form-control mt-1 p-2 rounded w-full" required
+                           aria-describedby="corrected_score_help">
+                    <small id="corrected_score_help" class="form-text text-gray-400">
+                        Enter the corrected score between 0 and 10.
+                    </small>
+                </div>
+                <div class="form-group mb-4">
+                    <label for="feedback_text" class="block text-sm font-medium">Feedback (Optional)</label>
+                    <textarea name="feedback_text" id="feedback_text" rows="4"
+                              class="form-control mt-1 p-2 rounded w-full"
+                              aria-describedby="feedback_text_help"></textarea>
+                    <small id="feedback_text_help" class="form-text text-gray-400">
+                        Provide additional feedback or comments.
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-primary px-4 py-2 rounded"
+                        aria-label="Submit feedback for this answer">
+                    Submit Feedback
+                </button>
+                <a href="{{ url_for('teacher_view_score') }}" class="btn btn-secondary px-4 py-2 rounded ml-2"
+                   aria-label="Cancel and return to scores">
+                    Cancel
+                </a>
+            </form>
+            {% else %}
+            <p class="text-gray-400">No answer data available for feedback.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

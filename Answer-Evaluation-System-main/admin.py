@@ -220,14 +220,47 @@ def admin_login():
 
 
 
-# Admin home route
-@app.route('/admin/home')
+@app.route('/admin/home', methods=['GET', 'POST'])
 def admin_home():
-    if 'admin_logged_in' in session:
-        return render_template('adminhome.html')
-    else:
+    if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
 
+    retrain_result = None
+
+    if request.method == 'POST':
+        if 'retrain' in request.form:
+            retrain_result = retrain_models(mysql)
+
+    # Fetch evaluation performance metrics
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT AVG(ABS(score - corrected_score)) as avg_error, COUNT(*) as total_corrections
+        FROM StudentAnswers
+        WHERE corrected_score IS NOT NULL
+    """)
+    metrics = cur.fetchone()
+    avg_error = metrics[0] if metrics[0] is not None else 0
+    total_corrections = metrics[1]
+
+    # Fetch recent feedback
+    cur.execute("""
+        SELECT f.feedback_id, f.feedback_text, f.corrected_score, sa.answer_text, ea.answer_text
+        FROM EvaluationFeedback f
+        JOIN StudentAnswers sa ON f.answer_id = sa.answer_id
+        JOIN ExpectedAnswers ea ON sa.question_id = ea.question_id
+        ORDER BY f.submitted_at DESC
+        LIMIT 5
+    """)
+    feedback = cur.fetchall()
+    cur.close()
+
+    return render_template(
+        'adminhome.html',
+        avg_error=avg_error,
+        total_corrections=total_corrections,
+        feedback=feedback,
+        retrain_result=retrain_result
+    )
 # Admin students route
 @app.route('/admin/students')
 def admin_students():
@@ -617,41 +650,42 @@ def view_teacher_test_questions(test_id):
 ###### Teacher ( student marks section page) ################
 @app.route('/teacher_view_score')
 def teacher_view_score():
-    # Check if the user is logged in as a teacher
-    if 'teacher_logged_in' in session:
-        teacher_id = session['teacher_id']
-
-        # Fetch student answers and expected answers for the logged-in teacher's tests
-        cur = mysql.connection.cursor()
-        query = """
-            SELECT s.student_id, s.username AS student_username, t.test_name, q.question_text, ea.answer_text AS expected_answer, sa.answer_text AS student_answer, sa.score
-            from StudentAnswers sa
-            JOIN Students s ON sa.student_id = s.student_id
-            JOIN Tests t ON sa.test_id = t.test_id
-            JOIN Questions q ON sa.question_id = q.question_id
-            JOIN ExpectedAnswers ea ON q.question_id = ea.question_id
-            WHERE t.teacher_id = %s
-        """
-        cur.execute(query, (teacher_id,))
-        results = cur.fetchall()
-
-        # Group the results by student_id and test_name
-        student_scores = defaultdict(lambda: {'student_username': None, 'tests': defaultdict(list)})
-        for result in results:
-            student_id, student_username, test_name, question_text, expected_answer, student_answer, score = result
-            student_scores[student_id]['student_username'] = student_username
-            student_scores[student_id]['tests'][test_name].append({
-                'question_text': question_text,
-                'expected_answer': expected_answer,
-                'student_answer': student_answer,
-                'score': score
-            })
-
-        return render_template('teacher_view_score.html', student_scores=student_scores)
-    else:
+    if 'teacher_logged_in' not in session:
         return redirect(url_for('teacher_login'))
 
+    teacher_id = session['teacher_id']
+    cur = mysql.connection.cursor()
+    query = """
+        SELECT s.student_id, s.username AS student_username, t.test_name, q.question_text, 
+               ea.answer_text AS expected_answer, sa.answer_text AS student_answer, 
+               sa.score, sa.answer_id
+        FROM StudentAnswers sa
+        JOIN Students s ON sa.student_id = s.student_id
+        JOIN Tests t ON sa.test_id = t.test_id
+        JOIN Questions q ON sa.question_id = q.question_id
+        JOIN ExpectedAnswers ea ON q.question_id = ea.question_id
+        WHERE t.teacher_id = %s
+    """
+    cur.execute(query, (teacher_id,))
+    results = cur.fetchall()
+    cur.close()
 
+    student_scores = defaultdict(lambda: {'student_username': None, 'tests': defaultdict(list)})
+    for result in results:
+        student_id, student_username, test_name, question_text, expected_answer, student_answer, score, answer_id = result
+        student_scores[student_id]['student_username'] = student_username
+        student_scores[student_id]['tests'][test_name].append({
+            'question_text': question_text or 'N/A',
+            'expected_answer': expected_answer or 'N/A',
+            'student_answer': student_answer or 'N/A',
+            'score': score if score is not None else 0,
+            'answer_id': answer_id
+        })
+
+    if not student_scores:
+        print("No student scores found for teacher_id:", teacher_id)
+
+    return render_template('teacher_view_score.html', student_scores=student_scores)
 ##############################################################
                                                               
 ######################## Student LOGIN ####################### 
@@ -851,6 +885,42 @@ def student_view_score():
 ###############################################
 #####################algorithm#################
 
+# additional routes
+@app.route('/teacher_submit_feedback/<int:answer_id>', methods=['GET', 'POST'])
+def teacher_submit_feedback(answer_id):
+    if 'teacher_logged_in' not in session:
+        return redirect(url_for('teacher_login'))
+
+    if request.method == 'POST':
+        corrected_score = float(request.form['corrected_score'])
+        feedback_text = request.form.get('feedback_text', '')
+        
+        # Update corrected score in StudentAnswers
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE StudentAnswers SET corrected_score = %s WHERE answer_id = %s", (corrected_score, answer_id))
+        
+        # Insert feedback into EvaluationFeedback
+        cur.execute("""
+            INSERT INTO EvaluationFeedback (answer_id, feedback_text, corrected_score, submitted_by)
+            VALUES (%s, %s, %s, %s)
+        """, (answer_id, feedback_text, corrected_score, 'teacher'))
+        mysql.connection.commit()
+        cur.close()
+        
+        return redirect(url_for('teacher_view_score'))
+    
+    # Fetch answer details for feedback form
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT sa.answer_text, ea.answer_text, sa.score
+        FROM StudentAnswers sa
+        JOIN ExpectedAnswers ea ON sa.question_id = ea.question_id
+        WHERE sa.answer_id = %s
+    """, (answer_id,))
+    answer = cur.fetchone()
+    cur.close()
+    
+    return render_template('teacher_feedback.html', answer_id=answer_id, answer=answer)
 
 ###########################################
 if __name__ == '__main__':

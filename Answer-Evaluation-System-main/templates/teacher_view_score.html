@@ -112,6 +112,16 @@
                 <td>{{ score.expected_answer }}</td>
                 <td>{{ score.student_answer }}</td>
                 <td>{{ score.score }}</td>
+                <td>
+                    {% if score.answer_id %}
+                    <a href="{{ url_for('teacher_submit_feedback', answer_id=score.answer_id) }}"
+                       class="text-blue-400 hover:underline" aria-label="Submit feedback for this answer">
+                        Submit Feedback
+                    </a>
+                    {% else %}
+                    <span class="text-gray-500">No Feedback Available</span>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
