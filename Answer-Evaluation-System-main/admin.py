@@ -9,6 +9,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import warnings
 from collections import defaultdict
+import os
 
 warnings.filterwarnings("ignore")
 for pkg in ["stopwords", "punkt", "wordnet", "vader_lexicon"]:
