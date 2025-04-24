@@ -854,5 +854,7 @@ def student_view_score():
 
 ###########################################
 
-# if __name__ == '__main__':
-#     app.run()
+if __name__ == '__main__':
+    # Bind to the port provided by Render (or default to 5000 for local testing)
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
