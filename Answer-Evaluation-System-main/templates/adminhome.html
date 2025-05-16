@@ -1,202 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Admin Dashboard - AES_Ai</title>
-    <meta name="keywords" content="">
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" title="Favicon"/>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}"/>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='namari-color.css') }}"/>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='font-awesome.min.css') }}"/>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='animate.css') }}"/>
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800' rel='stylesheet' type='text/css'>
-    <style>
-        #banner {
-            background: url("{{ url_for('static', filename='images/banner-images/globe.gif') }}") no-repeat center top;
-            background-size: cover;
-        }
-        .dashboard-section {
-            background-color: rgba(26, 32, 44, 0.9);
-            color: #e2e8f0;
-            padding: 2rem;
-            border-radius: 8px;
-            margin-top: 2rem;
-        }
-        .table th, .table td {
-            border-color: #4a5568;
-            color: #e2e8f0;
-        }
-        .table-striped tbody tr:nth-of-type(odd) {
-            background-color: #2d3748;
-        }
-        .btn-primary {
-            background-color: #3182ce;
-            border-color: #3182ce;
-            color: #fff;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            text-decoration: none;
-        }
-        .btn-primary:hover {
-            background-color: #2b6cb0;
-            border-color: #2b6cb0;
-        }
-        .debug-section {
-            background-color: #2d3748;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            white-space: pre-wrap;
-            color: #e2e8f0;
-        }
-    </style>
-</head>
-<body>
-    <div class="page-border" data-wow-duration="0.7s" data-wow-delay="0.2s">
-        <div class="top-border wow fadeInDown animated"></div>
-        <div class="right-border wow fadeInRight animated"></div>
-        <div class="bottom-border wow fadeInUp animated"></div>
-        <div class="left-border wow fadeInLeft animated"></div>
-    </div>
-    <div id="wrapper">
-        <header id="banner" class="scrollto clearfix" data-enllax-ratio=".5">
-            <div id="header" class="nav-collapse">
-                <div class="row clearfix">
-                    <div class="col-1">
-                        <div id="logo">
-                            <img src="{{ url_for('static', filename='images/logo1animate.gif') }}" id="banner-logo" alt="AES_Ai Logo"/>
-                            <img src="{{ url_for('static', filename='images/logo1animate.gif') }}" id="navigation-logo" alt="AES_Ai Logo"/>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>Admin Dashboard - AES_Ai</title>
+        <meta name="keywords" content="">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" title="Favicon" />
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='namari-color.css') }}" />
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='font-awesome.min.css') }}" />
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='animate.css') }}" />
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800' rel='stylesheet'
+            type='text/css'>
+        <style>
+            #banner {
+                background: url("{{ url_for('static', filename='images/banner-images/globe.gif') }}") no-repeat center top;
+                background-size: cover;
+            }
+
+            .dashboard-section {
+                background-color: rgba(26, 32, 44, 0.9);
+                color: #e2e8f0;
+                padding: 2rem;
+                border-radius: 8px;
+                margin-top: 2rem;
+            }
+
+            .table th,
+            .table td {
+                border-color: #4a5568;
+                color: #e2e8f0;
+            }
+
+            .table-striped tbody tr:nth-of-type(odd) {
+                background-color: #2d3748;
+            }
+
+            .btn-primary {
+                background-color: #3182ce;
+                border-color: #3182ce;
+                color: #fff;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                text-decoration: none;
+            }
+
+            .btn-primary:hover {
+                background-color: #2b6cb0;
+                border-color: #2b6cb0;
+            }
+
+            .debug-section {
+                background-color: #2d3748;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                white-space: pre-wrap;
+                color: #e2e8f0;
+                overflow: auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="page-border" data-wow-duration="0.7s" data-wow-delay="0.2s">
+            <div class="top-border wow fadeInDown animated"></div>
+            <div class="right-border wow fadeInRight animated"></div>
+            <div class="bottom-border wow fadeInUp animated"></div>
+            <div class="left-border wow fadeInLeft animated"></div>
+        </div>
+        <div id="wrapper">
+            <header id="banner" class="scrollto clearfix" data-enllax-ratio=".5">
+                <div id="header" class="nav-collapse">
+                    <div class="row clearfix">
+                        <div class="col-1">
+                            <div id="logo">
+                                <img src="{{ url_for('static', filename='images/logo1animate.gif') }}" id="banner-logo"
+                                    alt="AES_Ai Logo" />
+                                <img src="{{ url_for('static', filename='images/logo1animate.gif') }}"
+                                    id="navigation-logo" alt="AES_Ai Logo" />
+                            </div>
+                            <aside>
+                                <ul class="social-icons">
+                                    <li>
+                                        <a target="_blank" title="Facebook" href="https://www.facebook.com/username">
+                                            <i class="fa fa-facebook fa-1x"></i><span>Facebook</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a target="_blank" title="Google+" href="http://google.com/+username">
+                                            <i class="fa fa-google-plus fa-1x"></i><span>Google+</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a target="_blank" title="Github" href="http://www.github.com/username">
+                                            <i class="fa fa-github fa-1x"></i><span>Github</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a target="_blank" title="Instagram" href="http://www.instagram.com/username">
+                                            <i class="fa fa-instagram fa-1x"></i><span>Instagram</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </aside>
+                            <nav id="nav-main">
+                                <ul>
+                                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                                    <li class="active"><a href="{{ url_for('admin_home') }}">Dashboard</a></li>
+                                    <li><a href="{{ url_for('admin_students') }}">Student</a></li>
+                                    <li><a href="{{ url_for('admin_teachers') }}">Teacher</a></li>
+                                    <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
+                                </ul>
+                            </nav>
+                            <div id="nav-trigger"><span></span></div>
+                            <nav id="nav-mobile"></nav>
                         </div>
-                        <aside>
-                            <ul class="social-icons">
-                                <li>
-                                    <a target="_blank" title="Facebook" href="https://www.facebook.com/username">
-                                        <i class="fa fa-facebook fa-1x"></i><span>Facebook</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a target="_blank" title="Google+" href="http://google.com/+username">
-                                        <i class="fa fa-google-plus fa-1x"></i><span>Google+</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a target="_blank" title="Github" href="http://www.github.com/username">
-                                        <i class="fa fa-github fa-1x"></i><span>Github</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a target="_blank" title="Instagram" href="http://www.instagram.com/username">
-                                        <i class="fa fa-instagram fa-1x"></i><span>Instagram</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </aside>
-                        <nav id="nav-main">
-                            <ul>
-                                <li><a href="{{ url_for('index') }}">Home</a></li>
-                                <li class="active"><a href="{{ url_for('admin_home') }}">Dashboard</a></li>
-                                <li><a href="{{ url_for('admin_students') }}">Student</a></li>
-                                <li><a href="{{ url_for('admin_teachers') }}">Teacher</a></li>
-                                <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
-                            </ul>
-                        </nav>
-                        <div id="nav-trigger"><span></span></div>
-                        <nav id="nav-mobile"></nav>
                     </div>
                 </div>
-            </div>
-            <div id="banner-content" class="row clearfix">
-                <div class="col-38">
-                    <div class="section-heading">
-                        <h1>Admin Dashboard</h1>
-                        <h2>Monitor evaluation performance, manage feedback, and control AI model training with ease.</h2>
-                    </div>
-                    <div class="dashboard-section">
-                        <!-- Debug Section -->
-                        <div class="debug-section">
-                            <h3>Debug: Dashboard Data</h3>
-                            <pre>Average Error: {{ avg_error|pprint }}</pre>
-                            <pre>Total Corrections: {{ total_corrections|pprint }}</pre>
-                            <pre>Feedback: {{ feedback|pprint }}</pre>
+                <div id="banner-content" class="row clearfix">
+                    <div class="col-38">
+                        <div class="section-heading">
+                            <h1>Admin Dashboard</h1>
+                            <h2>Monitor evaluation performance, manage feedback, and control AI model training with
+                                ease.</h2>
                         </div>
+                        <div class="dashboard-section">
+                            <!-- Debug Section -->
+                            <div class="debug-section" style="height: 400px;">
+                                <h3>Debug: Dashboard Data</h3>
+                                <pre>Average Error: {{ avg_error|pprint }}</pre>
+                                <pre>Total Corrections: {{ total_corrections|pprint }}</pre>
+                                <pre>Feedback: {{ feedback|pprint }}</pre>
+                            </div>
 
-                        <!-- Retraining Result -->
-                        {% if retrain_result %}
-                        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
-                            <p>Fine-tuning: {{ 'Success' if retrain_result.fine_tune_success else 'Failed (insufficient data)' }}</p>
-                            <p>Weight optimization: {{ 'Success' if retrain_result.weights_updated else 'Failed (insufficient data)' }}</p>
-                        </div>
-                        {% endif %}
-                        {% if schema_update_result %}
-                        <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6">
-                            <p>Schema update: {{ schema_update_result.message }}</p>
-                        </div>
-                        {% endif %}
-
-                        <!-- Metrics -->
-                        <div class="bg-gray-800 shadow-md rounded-lg p-6 mb-6">
-                            <h2 class="text-2xl font-semibold mb-4">Evaluation Performance</h2>
-                            <p><strong>Average Error:</strong> {{ avg_error|round(2)|default('N/A') }}</p>
-                            <p><strong>Total Corrections:</strong> {{ total_corrections|default(0) }}</p>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <form method="POST" class="mb-6">
-                            <button type="submit" name="retrain" class="btn-primary mr-4" aria-label="Retrain models and optimize weights">
-                                Retrain Models & Optimize Weights
-                            </button>
-                        </form>
-
-                        <!-- Recent Feedback -->
-                        <div class="bg-gray-800 shadow-md rounded-lg p-6">
-                            <h2 class="text-2xl font-semibold mb-4">Recent Feedback</h2>
-                            {% if feedback %}
-                            <table class="w-full border-collapse table">
-                                <thead>
-                                    <tr class="bg-gray-700">
-                                        <th class="border p-2">Feedback ID</th>
-                                        <th class="border p-2">Student Answer</th>
-                                        <th class="border p-2">Expected Answer</th>
-                                        <th class="border p-2">Corrected Score</th>
-                                        <th class="border p-2">Feedback Text</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in feedback %}
-                                    <tr>
-                                        <td class="border p-2">{{ item[0]|default('N/A') }}</td>
-                                        <td class="border p-2">{{ item[3]|default('N/A') }}</td>
-                                        <td class="border p-2">{{ item[4]|default('N/A') }}</td>
-                                        <td class="border p-2">{{ item[2]|default('N/A')|round(2) }}</td>
-                                        <td class="border p-2">{{ item[1]|default('N/A') }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            {% else %}
-                            <p class="text-gray-400">No feedback available.</p>
+                            <!-- Retraining Result -->
+                            {% if retrain_result %}
+                            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
+                                <p>Fine-tuning: {{ 'Success' if retrain_result.fine_tune_success else 'Failed
+                                    (insufficient data)' }}</p>
+                                <p>Weight optimization: {{ 'Success' if retrain_result.weights_updated else 'Failed
+                                    (insufficient data)' }}</p>
+                            </div>
                             {% endif %}
+                            {% if schema_update_result %}
+                            <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6">
+                                <p>Schema update: {{ schema_update_result.message }}</p>
+                            </div>
+                            {% endif %}
+
+                            <!-- Metrics -->
+                            <div class="bg-gray-800 shadow-md rounded-lg p-6 mb-6">
+                                <h2 class="text-2xl font-semibold mb-4">Evaluation Performance</h2>
+                                <p><strong>Average Error:</strong> {{ avg_error|round(2)|default('N/A') }}</p>
+                                <p><strong>Total Corrections:</strong> {{ total_corrections|default(0) }}</p>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <form method="POST" class="mb-6">
+                                <button type="submit" name="retrain" class="btn-primary mr-4"
+                                    aria-label="Retrain models and optimize weights">
+                                    Retrain Models & Optimize Weights
+                                </button>
+                            </form>
+
+                            <!-- Recent Feedback -->
+                            <div class="bg-gray-800 shadow-md rounded-lg p-6" style="overflow: auto; height: 400px;">
+                                <h2 class="text-2xl font-semibold mb-4">Recent Feedback</h2>
+                                {% if feedback %}
+                                <table class="w-full border-collapse table">
+                                    <thead>
+                                        <tr class="bg-gray-700">
+                                            <th class="border p-2">Feedback ID</th>
+                                            <th class="border p-2">Student Answer</th>
+                                            <th class="border p-2">Expected Answer</th>
+                                            <th class="border p-2">Corrected Score</th>
+                                            <th class="border p-2">Feedback Text</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in feedback %}
+                                        <tr>
+                                            <td class="border p-2">{{ item[0]|default('N/A') }}</td>
+                                            <td class="border p-2">{{ item[3]|default('N/A') }}</td>
+                                            <td class="border p-2">{{ item[4]|default('N/A') }}</td>
+                                            <td class="border p-2">{{ item[2]|default('N/A')|round(2) }}</td>
+                                            <td class="border p-2">{{ item[1]|default('N/A') }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% else %}
+                                <p class="text-gray-400">No feedback available.</p>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </header>
-    </div>
+            </header>
+        </div>
 
-    <!-- JavaScript Resources -->
-    <script src="{{ url_for('static', filename='js/jquery.1.8.3.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/featherlight.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/featherlight.gallery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.enllax.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.scrollUp.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.easing.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.stickyNavbar.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.waypoints.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/images-loaded.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/lightbox.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/site.js') }}"></script>
-</body>
+        <!-- JavaScript Resources -->
+        <script src="{{ url_for('static', filename='js/jquery.1.8.3.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/featherlight.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/featherlight.gallery.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/jquery.enllax.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/jquery.scrollUp.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/jquery.easing.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/jquery.stickyNavbar.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/jquery.waypoints.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/images-loaded.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lightbox.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/site.js') }}"></script>
+    </body>
+
 </html>

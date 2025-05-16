@@ -11,30 +11,30 @@ widget:
 - source_sentence: Photosynthesis is the process by which green plants, algae, and
     some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.
   sentences:
-  - It’s a chemical reaction in plants using sunlight.
-  - Photosynthesis is when plants make their own food.
-  - Plants use carbon dioxide and water to make food in sunlight, giving off oxygen.
-- source_sentence: Photosynthesis is the process by which green plants, algae, and
-    some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.
-  sentences:
-  - Plants take in sunlight and make oxygen.
-  - It’s the process where plants make glucose using light, water, and CO2, releasing
-    oxygen.
+  - It’s when plants use sunlight to make sugar and oxygen from CO2 and water.
   - Photosynthesis is how plants use sunlight to make food from carbon dioxide and
     water, producing oxygen.
+  - It’s the process where plants make glucose using light, water, and CO2, releasing
+    oxygen.
 - source_sentence: Photosynthesis is the process by which green plants, algae, and
     some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.
   sentences:
+  - It’s a process that makes glucose in plants with light.
+  - It’s how plants grow using sunlight.
+  - Photosynthesis is when plants make their own food.
+- source_sentence: Photosynthesis is the process by which green plants, algae, and
+    some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.
+  sentences:
+  - Photosynthesis uses chlorophyll to make energy.
   - Photosynthesis is the process of plants making food with sunlight, water, and
     air.
-  - Plants make energy from sunlight.
-  - It’s a process that makes glucose in plants with light.
+  - It’s a chemical reaction in plants using sunlight.
 - source_sentence: Photosynthesis is the process by which green plants, algae, and
     some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.
   sentences:
-  - It’s how plants grow using sunlight.
-  - It’s when plants use sunlight to make sugar and oxygen from CO2 and water.
-  - Photosynthesis uses chlorophyll to make energy.
+  - Plants make energy from sunlight.
+  - Plants use sunlight to convert water and carbon dioxide into sugar.
+  - Plants use carbon dioxide and water to make food in sunlight, giving off oxygen.
 pipeline_tag: sentence-similarity
 library_name: sentence-transformers
 ---
@@ -89,8 +89,8 @@ model = SentenceTransformer("sentence_transformers_model_id")
 # Run inference
 sentences = [
     'Photosynthesis is the process by which green plants, algae, and some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.',
-    'It’s when plants use sunlight to make sugar and oxygen from CO2 and water.',
-    'It’s how plants grow using sunlight.',
+    'Plants use sunlight to convert water and carbon dioxide into sugar.',
+    'Plants make energy from sunlight.',
 ]
 embeddings = model.encode(sentences)
 print(embeddings.shape)
@@ -152,11 +152,11 @@ You can finetune this model on your own dataset.
   | type    | string                                                                            | string                                                                            | float                                                          |
   | details | <ul><li>min: 32 tokens</li><li>mean: 32.0 tokens</li><li>max: 32 tokens</li></ul> | <ul><li>min: 8 tokens</li><li>mean: 15.36 tokens</li><li>max: 23 tokens</li></ul> | <ul><li>min: 0.4</li><li>mean: 0.69</li><li>max: 1.0</li></ul> |
 * Samples:
-  | sentence_0                                                                                                                                                        | sentence_1                                                                       | label            |
-  |:------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------|:-----------------|
-  | <code>Photosynthesis is the process by which green plants, algae, and some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.</code> | <code>It’s a process that makes glucose in plants with light.</code>             | <code>0.7</code> |
-  | <code>Photosynthesis is the process by which green plants, algae, and some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.</code> | <code>Plants use sunlight to convert water and carbon dioxide into sugar.</code> | <code>0.8</code> |
-  | <code>Photosynthesis is the process by which green plants, algae, and some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.</code> | <code>Photosynthesis is how plants breathe and make food.</code>                 | <code>0.4</code> |
+  | sentence_0                                                                                                                                                        | sentence_1                                                                                    | label            |
+  |:------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------|:-----------------|
+  | <code>Photosynthesis is the process by which green plants, algae, and some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.</code> | <code>It’s how plants grow using sunlight.</code>                                             | <code>0.4</code> |
+  | <code>Photosynthesis is the process by which green plants, algae, and some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.</code> | <code>Plants use carbon dioxide and water to make food in sunlight, giving off oxygen.</code> | <code>0.9</code> |
+  | <code>Photosynthesis is the process by which green plants, algae, and some bacteria use sunlight, water, and carbon dioxide to produce glucose and oxygen.</code> | <code>Plants make energy from sunlight.</code>                                                | <code>0.5</code> |
 * Loss: [<code>CosineSimilarityLoss</code>](https://sbert.net/docs/package_reference/sentence_transformer/losses.html#cosinesimilarityloss) with these parameters:
   ```json
   {

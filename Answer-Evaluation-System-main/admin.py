@@ -72,10 +72,33 @@ def sentiment_analysis(text):
     return (sentiment_score + 1) / 2
 
 # Multinomial Naive Bayes score
+import pickle
+
 def multinomial_naive_bayes_score(expected_answer, student_answer):
     try:
         clf = joblib.load('naive_bayes_model.pkl')
         vectorizer = joblib.load('vectorizer.pkl')
+        # Verify model and vectorizer are valid
+        X_test = vectorizer.transform([student_answer])
+        clf.predict_proba(X_test)  # Test load
+    except (FileNotFoundError, EOFError, pickle.UnpicklingError, AttributeError) as e:
+        print(f"Error loading Naive Bayes model or vectorizer: {e}. Creating new model.")
+        answers = [expected_answer, student_answer]
+        vectorizer = CountVectorizer(tokenizer=preprocess_text)
+        X = vectorizer.fit_transform(answers)
+        y = [0, 1]
+        clf = MultinomialNB()
+        clf.fit(X, y)
+        joblib.dump(clf, 'naive_bayes_model.pkl')
+        joblib.dump(vectorizer, 'vectorizer.pkl')
+        print("New Naive Bayes model and vectorizer saved.")
+
+    X_student = vectorizer.transform([student_answer])
+    probs = clf.predict_proba(X_student)
+    return probs[0][1]
+    try:
+        clf = joblib.load('./naive_bayes_model.pkl')
+        vectorizer = joblib.load('./vectorizer.pkl')
     except FileNotFoundError:
         answers = [expected_answer, student_answer]
         vectorizer = CountVectorizer(tokenizer=preprocess_text)
