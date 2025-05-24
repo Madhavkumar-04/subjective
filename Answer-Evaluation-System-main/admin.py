@@ -14,6 +14,7 @@ import joblib
 from scheduler import init_scheduler, retrain_models
 from updated_nlp_functions import enhanced_sentence_match, semantic_similarity_score
 from fine_tune_sentence_transformer import fine_tune_sentence_transformer
+import os
 
 warnings.filterwarnings("ignore")
 for pkg in ["stopwords", "punkt", "wordnet", "vader_lexicon"]:
