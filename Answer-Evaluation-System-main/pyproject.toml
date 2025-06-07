@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "subjective"
+version = "0.1.0"
+description = ""
+authors = ["Madhav"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+Flask = "^3.1.1"
+Flask-MySQLdb = "^2.0.0"
+pandas = "^2.3.0"
+nltk = "^3.9.1"
+sentence-transformers = "^4.1.0"
+scikit-learn = "^1.7.0"
+language-tool-python = "^2.9.4"
+gunicorn = "^23.0.0"
+mysqlclient = "^2.2.7"
+torch = { version = "^2.7.1", source = "pytorch-cpu", optional = true }  # Optional: CPU-only
+
+[tool.poetry.extras]
+gpu = ["torch"]  # Optional: for GPU support
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

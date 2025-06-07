@@ -1,7 +1,0 @@
-Flask
-Flask-MySQLdb
-pandas
-nltk
-sentence-transformers
-scikit-learn
-language-tool-python
