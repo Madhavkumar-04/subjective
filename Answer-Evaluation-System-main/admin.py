@@ -11,9 +11,6 @@ import warnings
 from collections import defaultdict
 import os
 
-warnings.filterwarnings("ignore")
-for pkg in ["stopwords", "punkt", "wordnet", "vader_lexicon"]:
-    nltk.download(pkg)
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -44,6 +41,7 @@ EN_STOPWORDS = set(stopwords.words("english"))
 
 import nltk
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment import SentimentIntensityAnalyzer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
@@ -52,9 +50,32 @@ from sklearn.naive_bayes import MultinomialNB
 from sentence_transformers import SentenceTransformer
 import language_tool_python
 
+EN_STOPWORDS = set(stopwords.words("english"))
+
 # nltk.download('punkt')
 # nltk.download('wordnet')
 # nltk.download('vader_lexicon')
+
+
+# At module level, after imports
+sentence_transformer_model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+
+# Update sentiment_analysis
+def sentiment_analysis(text):
+    sia = SentimentIntensityAnalyzer()
+    sentiment_score = sia.polarity_scores(text)['compound']
+    return (sentiment_score + 1) / 2  # Remove model initialization
+
+# Update enhanced_sentence_match
+def enhanced_sentence_match(expected_answer, student_answer):
+    embeddings_expected = sentence_transformer_model.encode([expected_answer])
+    embeddings_student = sentence_transformer_model.encode([student_answer])
+    similarity = cosine_similarity([embeddings_expected.flatten()], [embeddings_student.flatten()])[0][0]
+    return similarity
+
+# Update semantic_similarity_score
+def semantic_similarity_score(expected_answer, student_answer):
+    return enhanced_sentence_match(expected_answer, student_answer)
 
 def preprocess_text(text):
     tokens = word_tokenize(text)  # Tokenization
@@ -82,18 +103,18 @@ def cosine_similarity_score(expected_answer, student_answer):
     return cosine_sim
 
 # Sentiment Analysis function
-def sentiment_analysis(text):
-    sia = SentimentIntensityAnalyzer()
-    sentiment_score = sia.polarity_scores(text)['compound']
-    return (sentiment_score + 1) / 2  # Normalize to range [0, 1]
+# def sentiment_analysis(text):
+#     sia = SentimentIntensityAnalyzer()
+#     sentiment_score = sia.polarity_scores(text)['compound']
+#     return (sentiment_score + 1) / 2  # Normalize to range [0, 1]
 
+#     model = SentenceTransformer('paraphrase-MiniLM-L6-v2')  # Load pre-trained Sentence Transformer model
 # Function to calculate enhanced sentence match score using Semantic Similarity
-def enhanced_sentence_match(expected_answer, student_answer):
-    model = SentenceTransformer('paraphrase-MiniLM-L6-v2')  # Load pre-trained Sentence Transformer model
-    embeddings_expected = model.encode([expected_answer])
-    embeddings_student = model.encode([student_answer])
-    similarity = cosine_similarity([embeddings_expected.flatten()], [embeddings_student.flatten()])[0][0]
-    return similarity
+# def enhanced_sentence_match(expected_answer, student_answer):
+#     embeddings_expected = model.encode([expected_answer])
+#     embeddings_student = model.encode([student_answer])
+#     similarity = cosine_similarity([embeddings_expected.flatten()], [embeddings_student.flatten()])[0][0]
+#     return similarity
 
 # Function to calculate multinomial naive Bayes score
 def multinomial_naive_bayes_score(expected_answer, student_answer):
@@ -125,12 +146,11 @@ def weighted_average_score(scores, weights):
     total_weight = sum(weights)
     return weighted_sum / total_weight
 
-def semantic_similarity_score(expected_answer, student_answer):
-    model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-    embeddings_expected = model.encode([expected_answer])
-    embeddings_student = model.encode([student_answer])
-    similarity = cosine_similarity([embeddings_expected.flatten()], [embeddings_student.flatten()])[0][0]
-    return similarity
+# def semantic_similarity_score(expected_answer, student_answer):
+#     embeddings_expected = model.encode([expected_answer])
+#     embeddings_student = model.encode([student_answer])
+#     similarity = cosine_similarity([embeddings_expected.flatten()], [embeddings_student.flatten()])[0][0]
+#     return similarity
 
 
 
