@@ -9,3 +9,4 @@ pandas==2.2.2
 joblib==1.4.0
 apscheduler==3.10.4
 accelerate==0.29.3
+gunicorn==23.0.0

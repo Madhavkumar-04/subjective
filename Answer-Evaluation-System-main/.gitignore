@@ -1,0 +1,91 @@
+# Python-specific
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Flask-specific
+instance/
+*.sqlite
+*.db
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Dependency directories
+node_modules/
+
+# ML/Dataset files (for answer evaluation system)
+*.h5
+*.pkl
+*.joblib
+*.model
+*.tf
+*.onnx
+*.pt
+*.pth
+*.npy
+*.npz
+data/
+datasets/
+models/
+*.csv
+*.tsv
+*.jsonl
+*.parquet
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Testing and coverage
+.coverage
+coverage/
+*.cover
+*.cache
+nosetests.xml
+coverage.xml
+*.pytest_cache/
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Miscellaneous
+*.bak
+*.swp
+*.tmp
+temp/
+tmp/
+*.zip
+*.tar.gz
+*.rar
+
+# Railway-specific
+.railway/
